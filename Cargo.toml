@@ -6,3 +6,20 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+atty = { version = "0.2.14", optional = true }
+structopt = { version = "0.3.18", optional = true }
+clap = { version = "4.4.18", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+crossterm = "0.27.0"
+ratatui = "0.26.0"
+
+[[bin]]
+name = "nosyman"
+path = "./src/main.rs"
+required-features = ["nosyman"]
+
+[features]
+default = ["nosyman"]
+nosyman = ["cli"]
+cli = ["atty", "structopt"]
