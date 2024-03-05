@@ -14,5 +14,8 @@ fn main() {
         SubCommand::Init(command) => {
             action::init::run(command.value);
         }
+        SubCommand::Start(command) => {
+            action::start::run(command.value);
+        }
     }
 }
