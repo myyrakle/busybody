@@ -1,6 +1,7 @@
 mod action;
 mod command;
 mod config;
+mod steps;
 mod tui;
 mod utils;
 
