@@ -1,9 +1,35 @@
 use crate::config::load_config;
 
+pub fn send_to_slack(disk_usage: u8, disk_threshold: u8) {
+    let config_file = load_config();
+    let slack_app_token = config_file.slack_app_token;
+    let slack_channel_id = config_file.slack_channel_id;
+
+    let message = format!(
+        r#"<!here>
+    디스크 사용량이 임계치를 초과했습니다. 정리가 필요합니다. ({disk_usage}% > {disk_threshold}%)"#,
+    );
+
+    let client = reqwest::blocking::Client::new();
+
+    let request_body =
+        serde_json::json!({ "text": message, "channel":slack_channel_id  }).to_string();
+
+    let res = client
+        .post("https://slack.com/api/chat.postMessage")
+        .bearer_auth(slack_app_token)
+        .body(request_body)
+        .send()
+        .unwrap();
+
+    println!("{:?}", res);
+}
+
 pub fn run() {
     let config_file = load_config();
     let disk_threshold = config_file.disk_threshold;
 
+    let mut danger = false;
     loop {
         let output = std::process::Command::new("df")
             .arg("-h")
@@ -26,8 +52,15 @@ pub fn run() {
         let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
         let stable = if disk_usage < disk_threshold {
+            if danger {
+                danger = false;
+            }
             "stable"
         } else {
+            if !danger {
+                danger = true;
+                send_to_slack(disk_usage, disk_threshold);
+            }
             "unstable"
         };
 
