@@ -29,4 +29,12 @@ WantedBy=network-online.target"#
         .unwrap();
 
     println!("{}", String::from_utf8(output.stdout).unwrap());
+
+    let output = Command::new("systemctl")
+        .arg("restart")
+        .arg("nosyman.service")
+        .output()
+        .unwrap();
+
+    println!("{}", String::from_utf8(output.stdout).unwrap());
 }
