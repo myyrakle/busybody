@@ -1,21 +1,8 @@
-use std::{fs, process::Command};
+use std::process::Command;
 
 const SERVICE_PATH: &str = "/etc/systemd/system/nosyman.service";
-const SHELL_PATH: &str = "/usr/bin/nosyman.sh";
 
 pub fn install_service() {
-    let username = std::env::var("USER").unwrap();
-
-    fs::write(
-        SHELL_PATH,
-        format!(
-            r#"#!/bin/bash
-/home/{username}/.cargo/bin/nosyman start
-        "#
-        ),
-    )
-    .unwrap();
-
     let service_content = format!(
         r#"[Unit]
 Description=Nosyman
@@ -24,9 +11,9 @@ Description=Nosyman
 Type=simple
 Restart=on-failure
 RestartSec=1
-User={username}
-WorkingDirectory=/home/{username}/.cargo/bin
-ExecStart=/usr/bin/nosyman.sh
+User=root
+WorkingDirectory=/usr/bin
+ExecStart=/usr/bin/nosyman
 
 [Install]
 WantedBy=network-online.target"#
