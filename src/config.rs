@@ -20,13 +20,17 @@ impl Default for ConfigFile {
 }
 
 impl ConfigFile {
-    pub fn save(&self) {
+    pub fn save(&self) -> Result<(), std::io::Error> {
         let config = serde_yaml::to_string(&self).expect("Failed to serialize config file");
-        std::fs::write(CONFIG_PATH, config).expect("Failed to write config file");
+        std::fs::write(CONFIG_PATH, config)
     }
 }
 
-const CONFIG_PATH: &str = if cfg!(linux) { "/etc/nosyman.yaml" } else { "" };
+const CONFIG_PATH: &str = if cfg!(target_os = "linux") {
+    "/etc/nosyman.yaml"
+} else {
+    ""
+};
 
 pub fn load_config() -> ConfigFile {
     let config = std::fs::read_to_string(CONFIG_PATH).expect("Failed to read config file");

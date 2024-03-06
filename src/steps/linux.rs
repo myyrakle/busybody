@@ -1,15 +1,23 @@
-use std::{path::PathBuf, process::Command, str::FromStr};
+use std::{fs, process::Command};
 
 const SERVICE_PATH: &str = "/etc/systemd/system/nosyman.service";
+const SHELL_PATH: &str = "/usr/bin/nosyman.sh";
 
-pub fn create_service_if_not_exists() {
-    let path = PathBuf::from_str(SERVICE_PATH).unwrap();
-    if !path.exists() {
-        let output = Command::new("echo").arg("$USER").output().unwrap();
-        let username = String::from_utf8(output.stdout).unwrap().trim().to_string();
+pub fn install_service() {
+    let username = std::env::var("USER").unwrap();
 
-        let service_content = format!(
-            r#"[Unit]
+    fs::write(
+        SHELL_PATH,
+        format!(
+            r#"#!/bin/bash
+/home/{username}/.cargo/bin/nosyman start
+        "#
+        ),
+    )
+    .unwrap();
+
+    let service_content = format!(
+        r#"[Unit]
 Description=Nosyman
 
 [Service]
@@ -18,12 +26,20 @@ Restart=on-failure
 RestartSec=1
 User={username}
 WorkingDirectory=/home/{username}/.cargo/bin
-ExecStart=/home/{username}/.cargo/bin/nosyman
+ExecStart=/usr/bin/nosyman.sh
 
 [Install]
 WantedBy=network-online.target"#
-        );
+    );
 
-        std::fs::write(SERVICE_PATH, service_content).unwrap();
-    }
+    std::fs::write(SERVICE_PATH, service_content).unwrap();
+
+    let output = Command::new("systemctl")
+        .arg("enable")
+        .arg("--now")
+        .arg("nosyman.service")
+        .output()
+        .unwrap();
+
+    println!("{}", String::from_utf8(output.stdout).unwrap());
 }

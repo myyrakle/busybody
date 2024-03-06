@@ -5,9 +5,9 @@ use ratatui::{
 };
 use std::io::Result;
 
-use crate::config;
+use crate::{config, steps::linux::install_service};
 
-use super::TerminalType;
+use super::{exit_tui, TerminalType};
 
 pub fn run(terminal: &mut TerminalType) -> Result<()> {
     terminal.clear()?;
@@ -19,7 +19,7 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
     let mut overwrite = true;
     let mut slack_app_token = String::new();
     let mut slack_channel_id = String::new();
-    let mut disk_threshold = 70_u8;
+    let mut disk_threshold = 70_u32;
     let mut install_daemon = true;
 
     if !config_exists {
@@ -33,6 +33,8 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
         render_text.push_str(stacked_text.as_str());
 
         if step == 5 {
+            exit_tui();
+            install_service();
             break;
         }
 
@@ -57,7 +59,6 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
             }
             3 => {
                 render_text.push_str(format!("▶ Enter Disk Threshold: {disk_threshold}%").as_str());
-                render_text.push_str(&disk_threshold.to_string());
             }
             4 => {
                 render_text.push_str("▶ Do you want to install a daemon? (y/n): ");
@@ -146,12 +147,16 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
                             _ => {}
                         },
                         3 => match key.code {
+                            KeyCode::Char('q') => break,
                             KeyCode::Backspace => {
                                 disk_threshold /= 10;
                             }
                             KeyCode::Char(c) => {
                                 if let Some(digit) = c.to_digit(10) {
-                                    disk_threshold = disk_threshold * 10 + (digit as u8);
+                                    disk_threshold = disk_threshold * 10 + (digit);
+                                    if disk_threshold > 100 {
+                                        disk_threshold %= 100;
+                                    }
                                 }
                             }
                             KeyCode::Esc => {
@@ -162,18 +167,24 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
                                     let config = config::ConfigFile {
                                         slack_app_token: slack_app_token.clone(),
                                         slack_channel_id: slack_channel_id.clone(),
-                                        disk_threshold,
+                                        disk_threshold: disk_threshold as u8,
                                     };
                                     stacked_text.push_str(
                                         format!("Disk Threshold: {disk_threshold}%\n").as_str(),
                                     );
-                                    config.save();
-                                    stacked_text.push_str("Config file saved ()\n");
+                                    if let Err(error) = config.save() {
+                                        exit_tui();
+                                        panic!("Failed to save config file: {}", error);
+                                    }
+                                    stacked_text.push_str("Config file saved\n");
+
+                                    step = 4;
                                 }
                             }
                             _ => {}
                         },
                         4 => match key.code {
+                            KeyCode::Char('q') => break,
                             KeyCode::Char('y') => {
                                 install_daemon = true;
                             }
