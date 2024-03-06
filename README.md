@@ -18,3 +18,6 @@ sudo ln -s /home/$USER/.cargo/bin/nosyman /usr/bin/nosyman
 ```
 nosyman --init
 ```
+
+init 작업이 정상적으로 동작했다면 systemctl status 명령을 통해 프로세스 상태를 상시 확인할 수 있습니다.
+![image](https://github.com/myyrakle/nosyman/assets/16988115/bd0c6bf9-6417-4752-bb8d-d724aefe14ec)
