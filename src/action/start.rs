@@ -1,3 +1,5 @@
+use std::hint::spin_loop;
+
 use crate::config::load_config;
 
 pub fn send_to_slack(disk_usage: u8, disk_threshold: u8) {
@@ -28,6 +30,7 @@ pub fn send_to_slack(disk_usage: u8, disk_threshold: u8) {
 
 pub fn run() {
     let config_file = load_config();
+    let mut latest_disk_usage = 0;
     let disk_threshold = config_file.disk_threshold;
 
     let mut danger = false;
@@ -49,6 +52,14 @@ pub fn run() {
             .replace("%", "")
             .parse()
             .unwrap();
+
+        // 사용량이 같으면 무시
+        if disk_usage == latest_disk_usage {
+            spin_loop();
+            continue;
+        }
+
+        latest_disk_usage = disk_usage;
 
         let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
