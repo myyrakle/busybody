@@ -1,5 +1,5 @@
 # nosyman
-![](https://img.shields.io/badge/language-Rust-red) ![](https://img.shields.io/badge/version-0.1.0-brightgreen) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/myyrakle/nosyman/blob/master/LICENSE)
+![](https://img.shields.io/badge/language-Rust-red) ![](https://img.shields.io/badge/version-0.2.0-brightgreen) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/myyrakle/nosyman/blob/master/LICENSE)
 
 * [English](/README.md)
 * [한국어](/README-ko.md)
