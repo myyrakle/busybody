@@ -26,6 +26,13 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
         step = 1;
     }
 
+    if config_exists {
+        let config = config::load_config();
+        slack_app_token = config.slack_app_token;
+        slack_channel_id = config.slack_channel_id;
+        disk_threshold = config.disk_threshold as u32;
+    }
+
     let mut stacked_text = String::new();
     let mut render_text = String::new();
     loop {
