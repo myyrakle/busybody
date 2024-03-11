@@ -28,6 +28,20 @@ pub fn send_to_slack(disk_usage: u8, disk_threshold: u8) {
     println!("{:?}", res.text().unwrap());
 }
 
+pub fn cleanup() {
+    let config_file = load_config();
+    if let Some(disk_cleanup_file_path) = config_file.disk_cleanup_file_path {
+        if disk_cleanup_file_path != "" {
+            let output = std::process::Command::new("sh")
+                .arg(disk_cleanup_file_path)
+                .output()
+                .unwrap();
+
+            println!("{output:?}");
+        }
+    }
+}
+
 pub fn run() {
     let config_file = load_config();
     let mut latest_disk_usage = 0;
@@ -72,6 +86,7 @@ pub fn run() {
             if !danger {
                 danger = true;
                 send_to_slack(disk_usage, disk_threshold);
+                cleanup();
             }
             "unstable"
         };

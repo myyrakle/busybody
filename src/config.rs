@@ -7,6 +7,7 @@ pub struct ConfigFile {
     pub slack_channel_id: String,
     pub slack_app_token: String,
     pub disk_threshold: u8,
+    pub disk_cleanup_file_path: Option<String>,
 }
 
 impl Default for ConfigFile {
@@ -15,6 +16,7 @@ impl Default for ConfigFile {
             slack_channel_id: "".to_string(),
             slack_app_token: "".to_string(),
             disk_threshold: 80,
+            disk_cleanup_file_path: None,
         }
     }
 }
