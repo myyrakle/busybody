@@ -20,6 +20,7 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
     let mut slack_app_token = String::new();
     let mut slack_channel_id = String::new();
     let mut disk_threshold = 70_u32;
+    let mut disk_cleanup_file_path = String::new();
     let mut install_daemon = true;
 
     if !config_exists {
@@ -31,6 +32,7 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
         slack_app_token = config.slack_app_token;
         slack_channel_id = config.slack_channel_id;
         disk_threshold = config.disk_threshold as u32;
+        disk_cleanup_file_path = config.disk_cleanup_file_path.unwrap_or_default();
     }
 
     let mut stacked_text = String::new();
@@ -68,6 +70,11 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
                 render_text.push_str(format!("▶ Enter Disk Threshold: {disk_threshold}%").as_str());
             }
             4 => {
+                render_text.push_str(
+                    format!("▶ Enter the cleanup path: [{disk_cleanup_file_path}]").as_str(),
+                );
+            }
+            5 => {
                 render_text.push_str("▶ Do you want to install a daemon? (y/n): ");
 
                 if install_daemon {
@@ -171,19 +178,10 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
                             }
                             KeyCode::Enter => {
                                 if step == 3 {
-                                    let config = config::ConfigFile {
-                                        slack_app_token: slack_app_token.clone(),
-                                        slack_channel_id: slack_channel_id.clone(),
-                                        disk_threshold: disk_threshold as u8,
-                                    };
                                     stacked_text.push_str(
-                                        format!("Disk Threshold: {disk_threshold}%\n").as_str(),
+                                        format!("Disk Threshold: {disk_cleanup_file_path}%\n")
+                                            .as_str(),
                                     );
-                                    if let Err(error) = config.save() {
-                                        exit_tui();
-                                        panic!("Failed to save config file: {}", error);
-                                    }
-                                    stacked_text.push_str("Config file saved\n");
 
                                     step = 4;
                                 }
@@ -191,6 +189,43 @@ pub fn run(terminal: &mut TerminalType) -> Result<()> {
                             _ => {}
                         },
                         4 => match key.code {
+                            KeyCode::Char('q') => break,
+                            KeyCode::Backspace => {
+                                disk_cleanup_file_path.pop();
+                            }
+                            KeyCode::Char(c) => {
+                                disk_cleanup_file_path.push(c);
+                            }
+                            KeyCode::Esc => {
+                                break;
+                            }
+                            KeyCode::Enter => {
+                                if step == 4 {
+                                    let config = config::ConfigFile {
+                                        slack_app_token: slack_app_token.clone(),
+                                        slack_channel_id: slack_channel_id.clone(),
+                                        disk_threshold: disk_threshold as u8,
+                                        disk_cleanup_file_path: if disk_cleanup_file_path == "" {
+                                            None
+                                        } else {
+                                            Some(disk_cleanup_file_path.clone())
+                                        },
+                                    };
+                                    stacked_text.push_str(
+                                        format!("Cleanup filepath: {disk_threshold}\n").as_str(),
+                                    );
+                                    if let Err(error) = config.save() {
+                                        exit_tui();
+                                        panic!("Failed to save config file: {}", error);
+                                    }
+                                    stacked_text.push_str("Config file saved\n");
+
+                                    step = 5;
+                                }
+                            }
+                            _ => {}
+                        },
+                        5 => match key.code {
                             KeyCode::Char('q') => break,
                             KeyCode::Char('y') => {
                                 install_daemon = true;
