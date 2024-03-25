@@ -25,5 +25,5 @@ nosyman --init
 If the init task ran normally, you can always check the process status through the systemctl status command.
 ![image](https://github.com/myyrakle/nosyman/assets/16988115/bd0c6bf9-6417-4752-bb8d-d724aefe14ec)
 
-디스크 사용량이 설정한 임계치를 넘어서면 슬랙으로 알림이 전송됩니다. 
+When disk usage exceeds the threshold you set, a notification is sent to Slack. 
 ![image](https://github.com/myyrakle/nosyman/assets/16988115/8eab612e-a03b-4515-b01c-ac02caca9b32)
