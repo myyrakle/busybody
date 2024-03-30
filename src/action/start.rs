@@ -2,7 +2,7 @@ use std::hint::spin_loop;
 
 use crate::config::load_config;
 
-pub fn send_to_slack(disk_usage: u8, disk_threshold: u8) {
+pub fn send_open_to_slack(disk_usage: u8, disk_threshold: u8) {
     let config_file = load_config();
     let slack_app_token = config_file.slack_app_token;
     let slack_channel_id = config_file.slack_channel_id;
@@ -11,6 +11,30 @@ pub fn send_to_slack(disk_usage: u8, disk_threshold: u8) {
         r#"<!here> 디스크 사용량이 임계치를 초과했습니다. 정리가 필요합니다. 
 ({disk_usage}% > {disk_threshold}%)"#,
     );
+
+    let client = reqwest::blocking::Client::new();
+
+    let request_body =
+        serde_json::json!({ "text": message, "channel":slack_channel_id  }).to_string();
+
+    let res = client
+        .post("https://slack.com/api/chat.postMessage")
+        .header("content-type", "application/json")
+        .bearer_auth(slack_app_token)
+        .body(request_body)
+        .send()
+        .unwrap();
+
+    println!("{:?}", res.text().unwrap());
+}
+
+pub fn send_close_to_slack(disk_usage: u8, disk_threshold: u8) {
+    let config_file = load_config();
+    let slack_app_token = config_file.slack_app_token;
+    let slack_channel_id = config_file.slack_channel_id;
+
+    let message =
+        format!(r#"디스크 사용량 문제가 해소되었습니다. ({disk_usage}% < {disk_threshold}%)"#,);
 
     let client = reqwest::blocking::Client::new();
 
@@ -80,12 +104,13 @@ pub fn run() {
         let stable = if disk_usage < disk_threshold {
             if danger {
                 danger = false;
+                send_close_to_slack(disk_usage, disk_threshold);
             }
             "stable"
         } else {
             if !danger {
                 danger = true;
-                send_to_slack(disk_usage, disk_threshold);
+                send_open_to_slack(disk_usage, disk_threshold);
                 cleanup();
             }
             "unstable"
